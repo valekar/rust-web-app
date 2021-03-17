@@ -1,0 +1,32 @@
+version: '3'
+
+volumes:
+  postgres_data:
+      driver: local
+  postgres_test_data:
+      driver: local
+
+services:
+  postgres:
+      image: postgres
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: "dbbackend"
+        POSTGRES_USER: "dbuser"
+        POSTGRES_PASSWORD: "dbpassword"
+        
+      ports:
+        - 5432:5432
+
+  postgres_test:
+      image: postgres
+      volumes:
+        - postgres_test_data:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: "test_db"
+        POSTGRES_USER: "test_user"
+        POSTGRES_PASSWORD: "test_password"
+        
+      ports:
+        - 5434:5432

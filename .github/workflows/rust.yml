@@ -1,0 +1,36 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the docker-compose stack
+      run: docker-compose -f docker-compose.yml up -d
+    - name: Check running containers
+      run: docker ps -a
+    - name: Install psql
+      run: sudo apt-get install -y postgresql-client
+    - name: Check PSQL version
+      run: psql --version
+    - name: Run database migration
+      run: psql postgres://dbuser:dbpassword@localhost:5432/dbbackend -f ./bin/backend/setup.sql
+    - name: Run build
+      run: cargo build --bin rust-backend 
+    - name: Run TEST migration
+      run: psql postgres://test_user:test_password@localhost:5434/test_db -f ./bin/backend/setup.sql
+    - name: Run TEST and CLEANUP
+      run: cargo test --bin rust-backend && cargo run --bin cleanup
+    - name: Rust Code Coverage
+      uses: Swatinem/fucov@v1.0.0
