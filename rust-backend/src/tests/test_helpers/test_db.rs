@@ -53,7 +53,7 @@ async fn create_db(db_url: &str, db_name: &str) {
 
 async fn run_migrations(pg_options: &PgConnectOptions) {
     let mut conn = PgConnection::connect_with(pg_options).await.unwrap();
-    let sql = async_std::fs::read_to_string("./bin/backend/setup.sql")
+    let sql = async_std::fs::read_to_string("../bin/backend/setup.sql")
         .await
         .unwrap();
     sqlx::query::<Postgres>(&sql)
