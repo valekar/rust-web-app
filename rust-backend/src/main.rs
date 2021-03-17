@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 #[allow(dead_code)]
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -122,6 +123,8 @@ fn get_pg_pool() -> PgConnectOptions {
 struct User {
     id: Uuid,
     username: String,
+    created_at: DateTime<Utc>,
+    modified_at: DateTime<Utc>,
 }
 
 #[cfg(test)]
