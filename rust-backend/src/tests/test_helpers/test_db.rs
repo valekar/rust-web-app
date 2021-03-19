@@ -40,6 +40,12 @@ impl TestDb {
     }
 }
 
+impl Drop for TestDb {
+    fn drop(&mut self) {
+        let _ = self.db_pool.take();
+    }
+}
+
 async fn create_db(db_url: &str, db_name: &str) {
     println!("{}", db_url);
     let mut conn = PgConnection::connect(db_url).await.unwrap();
