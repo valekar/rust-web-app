@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 //use serde_json::json;
 //use sqlx::prelude::Row;
-use sqlx::Pool;
 use sqlx::{postgres::PgConnectOptions, query_as};
+use sqlx::{postgres::PgQueryResult, Pool};
 use sqlx::{postgres::Postgres, query, PgPool};
 use std::env::var;
 use uuid::Uuid;
@@ -93,6 +93,41 @@ async fn server(db_pool: PgPool) -> Server<State> {
         Ok(res)
     });
 
+    app.at("/user").post(|mut req: Request<State>| async move {
+        let boy = req.body_json::<User>().await?;
+
+        let pool = &req.state().db_pool;
+
+        let query_to_insert =
+            r#"INSERT into users(id, username,created_at, modified_at) values ($1, $2, $3, $4)"#;
+
+        let row_inserted: PgQueryResult = sqlx::query::<Postgres>(query_to_insert)
+            .bind(boy.id)
+            .bind(boy.username)
+            .bind(boy.created_at)
+            .bind(boy.modified_at)
+            .execute(pool)
+            .await
+            .unwrap();
+
+        // let row_inserted: PgQueryResult = query!(
+        //     r#"insert into users(id, username,created_at, modified_at) values ($1, $2, $3, $4)"#,
+        //     Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap(),
+        //     "srini",
+        //     Utc::now(),
+        //     Utc::now()
+        // )
+        // .execute(pool)
+        // .await?;
+
+        //dbg!("TESTT {}", &row_inserted);
+
+        let mut res: Response = Response::new(StatusCode::Ok);
+        &res.set_body(Body::from_json(&row_inserted.rows_affected())?);
+
+        Ok(res)
+    });
+
     app
 }
 
@@ -120,7 +155,7 @@ fn get_pg_pool() -> PgConnectOptions {
 // }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct User {
+pub struct User {
     id: Uuid,
     username: String,
     created_at: DateTime<Utc>,

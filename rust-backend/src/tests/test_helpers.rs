@@ -3,16 +3,16 @@ mod test_db;
 use crate::State;
 use crate::{server, Server};
 use futures::prelude::*;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 pub use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::pin::Pin;
 use test_db::TestDb;
 use tide::{
-    http::{Request, Response, Url},
+    http::{Method, Request, Response, Url},
     StatusCode,
 };
-
-use serde::de::DeserializeOwned;
 
 pub async fn test_setup() -> TestServer {
     dotenv::dotenv().ok();
@@ -69,6 +69,7 @@ pub struct TestRequest {
 #[derive(Debug)]
 pub enum TestRequestKind {
     Get,
+    Post(Option<Value>),
 }
 
 impl TestRequest {
@@ -77,6 +78,14 @@ impl TestRequest {
 
         let mut req = match self.kind {
             TestRequestKind::Get => Request::new(tide::http::Method::Get, url),
+            TestRequestKind::Post(body) => {
+                let mut req = Request::new(Method::Post, url);
+                if let Some(body) = body {
+                    req.set_body(body.to_string());
+                    req.set_content_type("application/json".parse().unwrap());
+                }
+                req
+            }
         };
 
         let req_copy = req.clone();
@@ -122,5 +131,16 @@ pub fn get(url: &str) -> TestRequest {
         url: url.to_string(),
         headers: HashMap::new(),
         kind: TestRequestKind::Get,
+    }
+}
+
+pub fn post<T: Serialize>(url: &str, body: Option<T>) -> TestRequest {
+    let body = body.map(|body| serde_json::to_value(body).unwrap());
+
+    let kind = TestRequestKind::Post(body);
+    TestRequest {
+        url: url.to_string(),
+        headers: HashMap::new(),
+        kind,
     }
 }
