@@ -99,7 +99,7 @@ async fn server(db_pool: PgPool) -> Server<State> {
         let pool = &req.state().db_pool;
 
         let query_to_insert =
-            r#"INSERT into users(id, username,created_at, modified_at) values ($1, $2, $3, $4)"#;
+            r#"INSERT into users(id, username,created_at, modified_at) values ($1, $2, $3, $4) returning id"#;
 
         let row_inserted: PgQueryResult = sqlx::query::<Postgres>(query_to_insert)
             .bind(boy.id)
@@ -158,6 +158,7 @@ fn get_pg_pool() -> PgConnectOptions {
 pub struct User {
     id: Uuid,
     username: String,
+    hashed_password: String,
     created_at: DateTime<Utc>,
     modified_at: DateTime<Utc>,
 }

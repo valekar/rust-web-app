@@ -14,6 +14,8 @@ pub struct TestDb {
 
 impl TestDb {
     pub async fn new() -> Self {
+        dotenv::dotenv().ok();
+        pretty_env_logger::try_init().ok();
         let db_url = &var("DATABASE_URL_TEST").unwrap();
         let db_name = generate_db_name("test");
         let test_db_name = String::from(&var("TEST_DATABASE").unwrap());
@@ -62,10 +64,13 @@ async fn run_migrations(pg_options: &PgConnectOptions) {
     let sql = async_std::fs::read_to_string("../bin/backend/setup.sql")
         .await
         .unwrap();
-    sqlx::query::<Postgres>(&sql)
-        .execute(&mut conn)
-        .await
-        .unwrap();
+
+    for query in sql.split(";") {
+        sqlx::query::<Postgres>(&query)
+            .execute(&mut conn)
+            .await
+            .unwrap();
+    }
 }
 
 fn get_pg_options(db_name: &str) -> PgConnectOptions {

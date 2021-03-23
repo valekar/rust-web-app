@@ -2,6 +2,7 @@
 
 members = [
     "rust-backend",
-    "cleanup"
+    "cleanup",
+    "shared"
 ]
 

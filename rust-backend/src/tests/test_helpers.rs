@@ -15,7 +15,6 @@ use tide::{
 };
 
 pub async fn test_setup() -> TestServer {
-    dotenv::dotenv().ok();
     let test_db = TestDb::new().await;
     let db_pool = test_db.db();
 
@@ -88,28 +87,13 @@ impl TestRequest {
             }
         };
 
-        let req_copy = req.clone();
+        log_response(req.clone(), server).await;
+
         for (key, value) in self.headers {
             req.append_header(key.as_str(), value.as_str());
         }
 
-        let resp = server.simulate(req).await;
-
-        let resp_copy = server.simulate(req_copy).await;
-
-        let res = resp.unwrap();
-
-        match resp_copy {
-            Ok(_) => {
-                // res = result;
-            }
-            Err(err) => {
-                print!("Errrrr {}", err)
-            }
-        }
-
-        //let res = resp.unwrap();
-
+        let res = server.simulate(req).await.unwrap();
         let status = res.status();
         let headers = res
             .iter()
@@ -123,6 +107,18 @@ impl TestRequest {
         let json = res.body_json::<Value>().await.unwrap();
 
         (json, status, headers)
+    }
+
+    pub fn header(mut self, key: &str, value: impl ToString) -> Self {
+        self.headers.insert(key.to_string(), value.to_string());
+        self
+    }
+}
+
+async fn log_response(req_copy: Request, server: &TestServer) {
+    let resp_copy = server.simulate(req_copy).await;
+    if let Err(err) = resp_copy {
+        print!("Error in the response {}", err)
     }
 }
 

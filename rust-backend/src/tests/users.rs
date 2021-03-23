@@ -42,12 +42,13 @@ async fn get_all_users() {
 }
 
 #[async_std::test]
-async fn create_user() {
+async fn create_a_user() {
     let server = test_setup().await;
 
     let user: User = User {
         id: Uuid::new_v4(),
         username: "srini".to_string(),
+        hashed_password: "password".to_string(),
         created_at: Utc::now(),
         modified_at: Utc::now(),
     };
